@@ -1,0 +1,35 @@
+{
+  "name": "apollonius",
+  "version": "0.0.1",
+  "description": "An interface for browsing the Internet Archive",
+  "main": "main.js",
+  "module": "_main.js",
+  "dependencies": {
+    "esm": "^3.2.18",
+    "neverland": "^1.2.4"
+  },
+  "devDependencies": {
+    "literally-html": "^0.1.1"
+  },
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thepeoplesbourgeois/apollonius.git"
+  },
+  "keywords": [
+    "internet",
+    "archive",
+    "interface",
+    "client",
+    "video",
+    "player"
+  ],
+  "author": "The Peoples' Bourgeois",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thepeoplesbourgeois/apollonius/issues"
+  },
+  "homepage": "https://github.com/thepeoplesbourgeois/apollonius#readme"
+}
