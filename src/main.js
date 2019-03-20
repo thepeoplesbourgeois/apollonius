@@ -8,4 +8,18 @@ const Counter = pixiedust(() => {
   </button>`;
 });
 
+const Lookup = pixiedust(() => {
+  const [location, setLocation] = useState("");
+  const [metadata, setMetadata] = useState({});
+  const fetchMetadata = async () => {
+    const retrieved = await fetch(`https://archive.org/metadata/${location}`);
+
+  }
+  return html`
+    <form onsubmit=${fetchMetadata}>
+      <input />
+    </form>
+  `;
+})
+
 render(document.body, Counter);
