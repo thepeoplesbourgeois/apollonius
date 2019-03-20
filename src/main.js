@@ -8,6 +8,4 @@ const Counter = pixiedust(() => {
   </button>`;
 });
 
-const Lookup = (() => {});
-
 render(document.body, Counter);
