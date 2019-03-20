@@ -6,7 +6,9 @@
   "module": "_main.js",
   "dependencies": {
     "esm": "^3.2.18",
-    "neverland": "^1.2.4"
+    "neverland": "^1.2.4",
+    "rollup-plugin-node-resolve": "^4.0.1",
+    "typescript": "^2.9.2"
   },
   "devDependencies": {
     "literally-html": "^0.1.1"
