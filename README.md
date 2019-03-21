@@ -30,6 +30,8 @@ Open `~/index.html` in your browser.
   and its related videos.
 - The video player should display reviews written by other users.
 - Transition the video from an `<embed>` to native `<video>`
+  - Need to find a way to reliably embed the necessary video sources for formats supported by `<video>`
+  - Issue is what to do when the video `identifier` and the `filename` do not match.
 - The interface should ideally not be hideous.
 
 ## Technical implementation
