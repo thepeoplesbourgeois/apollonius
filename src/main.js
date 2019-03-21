@@ -24,6 +24,7 @@ const App = hookable(() => {
   /* -------------  Callbacks ------------- */
 
   async function fetchMetadata() {
+    debugger;
     const resp = await fetch(`https://archive.org/metadata/${destination}`);
     const json = await resp.json();
     const {metadata: {title, description, ...metaRest}} = json
@@ -100,6 +101,7 @@ const App = hookable(() => {
         return html`
           <li>
             <a title=${description} onclick=${(event) => {
+              debugger;
               event.preventDefault();
               setDestination(id);
               fetchData();
@@ -127,11 +129,12 @@ const App = hookable(() => {
   const Lookup = hookable(() => html`
     <div class="lookup">
       <form onsubmit=${(event) => {
+        debugger;
         event.preventDefault();
         const value = event.currentTarget.querySelector("input").value;
         if (value !== '') {
           setDestination(value);
-          fetchMetadata();
+          fetchData();
         }
       }}>
         I want to see

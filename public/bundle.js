@@ -2120,6 +2120,10 @@ const App = hookable(() => {
   const startingPoint = findParam ||
     "youtube-yBG10jlo9X0"; // Crash Course World Mythology #24: Ragnarok
 
+  if (!findParam) {
+    window.history.pushState({}, '', `?find=${startingPoint}`);
+  }
+
   const [destination, setDestination] = useState(startingPoint);
   const [identifier, setIdentifier] = useState(destination);
 
@@ -2129,10 +2133,11 @@ const App = hookable(() => {
   const [relatedData, setRelatedData] = useState([]);
   const [errorMsg, setErrorMsg] = useState('');
 
-  (() => fetchData())();
+  fetchData();
   /* -------------  Callbacks ------------- */
 
   async function fetchMetadata() {
+    debugger;
     const resp = await fetch(`https://archive.org/metadata/${destination}`);
     const json = await resp.json();
     const {metadata: {title, description, ...metaRest}} = json;
@@ -2140,12 +2145,21 @@ const App = hookable(() => {
     setDescription(description);
     setMetadataPairs(Object.entries(metaRest));
   }
+  async function fetchRelated() {
+    const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
+    const json = await resp.json();
+    const {hits: {hits: items}} = json;
+    const relData = items.map(
+      ({_id: id, _source: {title: [title], description: [description]}}) => ({id, title, description})
+    );
+    setRelatedData(relData);
+  }
   async function fetchData() {
     try {
       const meta = fetchMetadata();
-      // const rel = fetchRelated();
+      const rel = fetchRelated();
       await meta;
-      // await rel;
+      await rel;
       setIdentifier(destination);
       setErrorMsg('');
     } catch (error) {
@@ -2198,6 +2212,7 @@ const App = hookable(() => {
         return html$1`
           <li>
             <a title=${description} onclick=${(event) => {
+              debugger;
               event.preventDefault();
               setDestination(id);
               fetchData();
@@ -2225,11 +2240,12 @@ const App = hookable(() => {
   const Lookup = hookable(() => html$1`
     <div class="lookup">
       <form onsubmit=${(event) => {
+        debugger;
         event.preventDefault();
         const value = event.currentTarget.querySelector("input").value;
         if (value !== '') {
           setDestination(value);
-          fetchMetadata();
+          fetchData();
         }
       }}>
         I want to see
@@ -2259,7 +2275,7 @@ const App = hookable(() => {
           allowfullscreen></iframe>
       </div>
       <div>${ErrorMessage()}</div>
-      <!-- <div>RelatedVideos()</div> -->
+      <div>${RelatedVideos()}</div>
     </div>
   `);
 
