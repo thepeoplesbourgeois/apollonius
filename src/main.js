@@ -1,6 +1,6 @@
-import pixiedust, {render, html, useState} from 'neverland';
+import hookable, {render, html, useState} from 'neverland/esm';
 
-const App = pixiedust(() => {
+const App = hookable(() => {
   /* -------------    Setup   ------------- */
 
   const startingPoint = new URLSearchParams(window.location.search).get("find") ||
@@ -8,42 +8,54 @@ const App = pixiedust(() => {
 
   const [destination, setDestination] = useState(startingPoint);
   const [identifier, setIdentifier] = useState(destination);
-  const metadataUrl = `https://archive.org/metadata/${identifier}`
 
-  const relatedUrl = `https://be-api.us.archive.org/mds/v1/get_related/all/${identifier}`
-  const [videoData, setVideoData] = useState(() =>
-    fetch(metadataUrl).then(resp => resp.json()).then(json => json)
-  );
-  const [relatedData, setRelatedData] = useState(() =>
-    fetch(relatedUrl).then(resp => resp.json()).then(json => json)
-  );
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [metadataPairs, setMetadataPairs] = useState([])
 
-  window.history.pushState(null, null, `?find=${identifier}`)
+  const [relatedData, setRelatedData] = useState(async () => {
+    const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${identifier}`);
+    const json = await resp.json();
+    return await json;
+  });
+  const [errorMsg, setErrorMsg] = useState('');
+
+  window.history.pushState({}, '', `?find=${identifier}`)
 
   /* -------------  Callbacks ------------- */
 
-  function fetchMetadata() {
-    const requests = [
-      fetch(metadataUrl),
-      fetch(relatedUrl)
-    ];
-    Promise.all(requests)
+  async function fetchMetadata() {
+    let metadataReq = fetch(`https://archive.org/metadata/${destination}`);
+    metadataReq = await metadataReq;
+    const metadataJson = await metadataReq.json();
+
+    let relatedReq = fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
+    relatedReq = await relatedReq;
+    const relatedJson = await relatedReq.json();
+
+    const {metadata: {title, description, ...metaRest}} = metadataJson;
+    setTitle(title);
+    setDescription(description);
+    setMetadataPairs(Object.entries(metaRest));
+
+    Promise
+      .all(urls.map(url => fetch(url)))
       .then(async (responses) => {
-        const [videoJson, relatedJson] = await Promise.all(responses.map(r => r.json()));
-        setErrorMsg(null);
-        setVideoData(videoJson);
-        setRelatedData(relatedJson);
+        const promises = Promise.all(responses.map(r => r.json()));
+        const [videoData, relatedData] = await promises;
+        setErrorMsg('');
+        setVideoData(await videoData);
+        setRelatedData(awaitrelatedData);
         setIdentifier(destination);
-        window.history.pushState(null, null, `?find=${identifier}`);
+        window.history.pushState({}, '', `?find=${identifier}`);
       })
       .catch(error => setErrorMsg("It looks like that wasn't in the archive. Make sure your identifier is correct."));
   }
 
   /* ------------- Components ------------- */
 
-  const ErrorMessage = pixiedust(() => html`<div style=${{
-    display: errorMsg ? "block" : "none",
+  const ErrorMessage = hookable(() => html`<div style=${{
+    display: errorMsg === '' ? "none" : "block",
     position: "relative",
     top: -316,
     width: 512,
@@ -51,70 +63,81 @@ const App = pixiedust(() => {
   }} class="error-message">${errorMsg}</div>
   `);
 
-  const VideoDetails = pixiedust(async () => {
-    const {metadata: {title, description, ...metaRest}} = await videoData;
-    return html`
+  const VideoDetails = hookable(() => html`
+    <div class="details">
       <div>
-        <div>
-          <h1>${title}</h1>
-          <p>${description}</p>
-        </div>
-        <div>
-          <table>
-            <thead>
+        <h1>${title}</h1>
+        <p>${description}</p>
+      </div>
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${metadataPairs.map(([key, value]) => html`
               <tr>
-                <th>Key</th>
-                <th>Value</th>
+                <td>${key}</td>
+                <td>${JSON.stringify(value)}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${Object.entries(metaRest).map(([key, value]) => html`
-                <tr>
-                  <td>${key}</td>
-                  <td>${value}</td>
-                </tr>
-              `)}
-            </tbody>
-          </table>
-        </div>
+            `)}
+          </tbody>
+        </table>
       </div>
-    `
-  });
+    </div>
+  `);
 
-  const RelatedVideos = pixiedust(async () => {
-    const {hits: {hits}} = await relatedData;
-    const relatedVideos = hits
-      .map(({_id: id, _source: {title: [title], description: [description]}}) => html`
-        <li>
-          <a title=${description} onclick=${(event) => {}}>
-            <img /> <!--TODO: add image src-->
-            <span>${title}</span>
-          </a>
-        </li>
-      `)
-    debugger;
-    return html`
-      <ul>
+  // const RelatedVideos = hookable(async () => {
+  //   const {hits: {hits: items}} = await relatedData;
+  //   // debugger;
+  //   const relatedVideos = items
+  //     .map((item) => {
+  //       const {_id: id, _source: {title: [title], description: [description]}} = item
+  //       debugger;
+  //       return html`
+  //         <li>
+  //           <a title=${description} onclick=${(event) => {
+  //             event.preventDefault();
+  //             setIdentifier(id);
+  //             fetchMetadata();
+  //           }}>
+  //             <img src=${`https://archive.org/services/img/${id}`} height=80 width=120 />
+  //             <span>${title}</span>
+  //           </a>
+  //         </li>
+  //       `
+  //     });
+  //   // debugger;
+  //   return html`
+  //     <ul style=${{
+  //       display: 'inline-block',
+  //       height: 640,
+  //       width: 220,
+  //       backgroundColor: 'rgb(20, 20, 20)',
+  //       color: '#FFF',
+  //       textDecoration: 'none'
+  //     }}>
+  //       ${relatedVideos}
+  //     </ul>
+  //   `
+  // });
 
-      </ul>
-    `
-  });
+  const Lookup = hookable(() => html`
+    <div class="lookup">
+      <form onsubmit=${(event) => {event.preventDefault(); fetchMetadata()}}>
+        I want to see
+        <span>
+          archive.org/details/
+          <input type="text" placeholder=${identifier} onchange=${({currentTarget: {value}}) => setDestination(value)} />
+        </span>
+      </form>
+    </div>
+  `);
 
-  const Lookup = pixiedust(async () => {
-    return html`
-      <div>
-        <form onsubmit=${(event) => {event.preventDefault(); fetchMetadata()}}>
-          I want to see
-          <span>
-            archive.org/details/
-            <input type="text" placeholder=${identifier} onchange=${({currentTarget: {value}}) => setDestination(value)} />
-          </span>
-        </form>
-      </div>
-    `
-  });
-
-  const VideoPlayer = pixiedust(() => html`
+  const VideoPlayer = hookable(() => html`
     <div style=${{
       display: 'flex',
       flexDirection: 'row',
@@ -129,7 +152,6 @@ const App = pixiedust(() => {
         playlist="1"
         allowfullscreen></iframe>
       ${ErrorMessage()}
-      ${RelatedVideos()}
     </div>
   `);
 
