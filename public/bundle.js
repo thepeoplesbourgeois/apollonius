@@ -2116,7 +2116,8 @@ var hookable = fn => augmentor(function () {
 const App = hookable(() => {
   /* -------------    Setup   ------------- */
 
-  const startingPoint = new URLSearchParams(window.location.search).get("find") ||
+  const findParam = new URLSearchParams(window.location.search).get("find");
+  const startingPoint = findParam ||
     "youtube-yBG10jlo9X0"; // Crash Course World Mythology #24: Ragnarok
 
   const [destination, setDestination] = useState(startingPoint);
@@ -2125,54 +2126,31 @@ const App = hookable(() => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [metadataPairs, setMetadataPairs] = useState([]);
-  (async () => {
-    const resp = await fetch(`https://archive.org/metadata/${destination}`);
-    const {metadata: {title, description, ...metaRest}} = await resp.json();
-    setTitle(title);
-    setDescription(description);
-    setMetadataPairs(metaRest);
-  })();
-
   const [relatedData, setRelatedData] = useState([]);
-  (async () => {
-    const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${identifier}`);
-    const {hits: {hits: items}} = await resp.json();
-    setRelatedData(items.map(
-      ({_id: id, _source: {title: [title], description: [description]}}) => ({id, title, description})
-    ));
-  })();
   const [errorMsg, setErrorMsg] = useState('');
 
-  window.history.pushState({}, '', `?find=${identifier}`);
-
+  (() => fetchData())();
   /* -------------  Callbacks ------------- */
 
   async function fetchMetadata() {
-    let metadataReq = fetch(`https://archive.org/metadata/${destination}`);
-    metadataReq = await metadataReq;
-    const metadataJson = await metadataReq.json();
-
-    let relatedReq = fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
-    relatedReq = await relatedReq;
-    const relatedJson = await relatedReq.json();
-
-    const {metadata: {title, description, ...metaRest}} = metadataJson;
+    const resp = await fetch(`https://archive.org/metadata/${destination}`);
+    const json = await resp.json();
+    const {metadata: {title, description, ...metaRest}} = json;
     setTitle(title);
     setDescription(description);
     setMetadataPairs(Object.entries(metaRest));
-
-    Promise
-      .all(urls.map(url => fetch(url)))
-      .then(async (responses) => {
-        const promises = Promise.all(responses.map(r => r.json()));
-        const [videoData, relatedData] = await promises;
-        setErrorMsg('');
-        setVideoData(await videoData);
-        setRelatedData(awaitrelatedData);
-        setIdentifier(destination);
-        window.history.pushState({}, '', `?find=${identifier}`);
-      })
-      .catch(error => setErrorMsg("It looks like that wasn't in the archive. Make sure your identifier is correct."));
+  }
+  async function fetchData() {
+    try {
+      const meta = fetchMetadata();
+      // const rel = fetchRelated();
+      await meta;
+      // await rel;
+      setIdentifier(destination);
+      setErrorMsg('');
+    } catch (error) {
+      setErrorMsg("It looks like that wasn't in the archive. Make sure your identifier is correct.");
+    }
   }
 
   /* ------------- Components ------------- */
@@ -2221,10 +2199,10 @@ const App = hookable(() => {
           <li>
             <a title=${description} onclick=${(event) => {
               event.preventDefault();
-              setIdentifier(id);
-              fetchMetadata();
+              setDestination(id);
+              fetchData();
             }}>
-              <img src=${`https://archive.org/services/img/${id}`} height=80 width=120 />
+              <img src=${`https://archive.org/services/img/${id}`} height=50 width=75 />
               <span>${title}</span>
             </a>
           </li>
@@ -2234,7 +2212,7 @@ const App = hookable(() => {
       <ul style=${{
         display: 'inline-block',
         height: 480,
-        width: 220,
+        width: 250,
         backgroundColor: 'rgb(20, 20, 20)',
         color: '#FFF',
         textDecoration: 'none'
@@ -2246,12 +2224,20 @@ const App = hookable(() => {
 
   const Lookup = hookable(() => html$1`
     <div class="lookup">
-      <form onsubmit=${(event) => {event.preventDefault(); fetchMetadata();}}>
+      <form onsubmit=${(event) => {
+        event.preventDefault();
+        const value = event.currentTarget.querySelector("input").value;
+        if (value !== '') {
+          setDestination(value);
+          fetchMetadata();
+        }
+      }}>
         I want to see
         <span>
           archive.org/details/
-          <input type="text" placeholder=${identifier} onchange=${({currentTarget: {value}}) => setDestination(value)} />
+          <input type="text" placeholder=${identifier} />
         </span>
+        <button type="submit">please.</button>
       </form>
     </div>
   `);
@@ -2261,17 +2247,19 @@ const App = hookable(() => {
       display: 'flex',
       flexDirection: 'row',
     }}>
-      <iframe
-        src=${`https://archive.org/embed/${identifier}`}
-        width="640"
-        height="480"
-        frameborder="0"
-        webkitallowfullscreen="true"
-        mozallowfullscreen="true"
-        playlist="1"
-        allowfullscreen></iframe>
-      ${ErrorMessage()}
-      ${RelatedVideos()}
+      <div>
+        <iframe
+          src=${`https://archive.org/embed/${identifier}`}
+          width="640"
+          height="480"
+          frameborder="0"
+          webkitallowfullscreen="true"
+          mozallowfullscreen="true"
+          playlist="1"
+          allowfullscreen></iframe>
+      </div>
+      <div>${ErrorMessage()}</div>
+      <!-- <div>RelatedVideos()</div> -->
     </div>
   `);
 
