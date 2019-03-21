@@ -19,7 +19,7 @@ Open `~/index.html` in your browser.
 
 ## Technical implementation
 
-Apollonius runs entirely within a webpage via the JavaScript library [`neverland`](github.com/webreflection/neverland)
+Apollonius runs entirely within a webpage via the JavaScript library [`neverland`](https://github.com/webreflection/neverland)
 by Andrea Giammarchi. `neverland` is meant to be a replacement for `React`, with
 an emphasis on state management through the Hook pattern [introduced in React 16.8](https://reactjs.org/docs/hooks-intro.html).
 New features will be implemented as I learn more about the JavaScript standard library
