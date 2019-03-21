@@ -12,16 +12,10 @@ const App = pixiedust(() => {
 
   const relatedUrl = `https://be-api.us.archive.org/mds/v1/get_related/all/${identifier}`
   const [videoData, setVideoData] = useState(() =>
-    fetch(metadataUrl).then(resp => resp.json()).then(json => {
-      console.log(json)
-      setVideoData(json)
-    })
+    fetch(metadataUrl).then(resp => resp.json()).then(json => json)
   );
   const [relatedData, setRelatedData] = useState(() =>
-    fetch(relatedUrl).then(resp => resp.json()).then(json => {
-      console.log(json)
-      setRelatedData(json)
-    })
+    fetch(relatedUrl).then(resp => resp.json()).then(json => json)
   );
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -57,29 +51,68 @@ const App = pixiedust(() => {
   }} class="error-message">${errorMsg}</div>
   `);
 
-  const VideoDetails = pixiedust(() => html`
-    <div>
+  const VideoDetails = pixiedust(async () => {
+    const {metadata: {title, description, ...metaRest}} = await videoData;
+    return html`
+      <div>
+        <div>
+          <h1>${title}</h1>
+          <p>${description}</p>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(metaRest).map(([key, value]) => html`
+                <tr>
+                  <td>${key}</td>
+                  <td>${value}</td>
+                </tr>
+              `)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+  });
 
-    </div>
-  `);
+  const RelatedVideos = pixiedust(async () => {
+    const {hits: {hits}} = await relatedData;
+    const relatedVideos = hits
+      .map(({_id: id, _source: {title: [title], description: [description]}}) => html`
+        <li>
+          <a title=${description} onclick=${(event) => {}}>
+            <img /> <!--TODO: add image src-->
+            <span>${title}</span>
+          </a>
+        </li>
+      `)
+    debugger;
+    return html`
+      <ul>
 
-  const Lookup = pixiedust(() => html`
-    <div>
-      <form onsubmit=${(event) => {event.preventDefault(); fetchMetadata()}}>
-        I want to see
-        <span>
-          archive.org/details/
-          <input type="text" placeholder=${identifier} onchange=${({currentTarget: {value}}) => setDestination(value)} />
-        </span>
-      </form>
-    </div>
-  `);
+      </ul>
+    `
+  });
 
-  const RelatedVideos = pixiedust(() => html`
-    <div>
-
-    </div>
-  `)
+  const Lookup = pixiedust(async () => {
+    return html`
+      <div>
+        <form onsubmit=${(event) => {event.preventDefault(); fetchMetadata()}}>
+          I want to see
+          <span>
+            archive.org/details/
+            <input type="text" placeholder=${identifier} onchange=${({currentTarget: {value}}) => setDestination(value)} />
+          </span>
+        </form>
+      </div>
+    `
+  });
 
   const VideoPlayer = pixiedust(() => html`
     <div style=${{

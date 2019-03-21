@@ -2113,43 +2113,116 @@ var pixiedust = fn => augmentor(function () {
   return $[i].apply(this, arguments);
 });
 
-// const [metadata, setMetadata] = useState(async () => {
-//   const resp = await fetch(`https://archive.org/metadata/${identifier}`);
-//   const json = await resp.json();
-//   console.log(json);
-//   return json;
-// });
-// async function fetchMetadata(event) {
-//   event.preventDefault();
-//   const requests = await Promise.all([
-//     ,
-//
-//   ]);
-//   const [video, related] = await Promise.all(requests);
-//   setMetadata({video, related})
-// };
+const App = pixiedust(() => {
+  /* -------------    Setup   ------------- */
 
-const Lookup = pixiedust(() => {
-  const [destination, setDestination] = useState("youtube-yBG10jlo9X0");
+  const startingPoint = new URLSearchParams(window.location.search).get("find") ||
+    "youtube-yBG10jlo9X0"; // Crash Course World Mythology #24: Ragnarok
+
+  const [destination, setDestination] = useState(startingPoint);
   const [identifier, setIdentifier] = useState(destination);
+  const metadataUrl = `https://archive.org/metadata/${identifier}`;
 
-  async function fetchMetadata() {
-    setIdentifier(destination);
-    const vr = fetch(`https://archive.org/metadata/${identifier}`);
-    const rr = fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${identifier}`);
-    const videoReq = await vr;
-    const relatedReq = await rr;
-    const data = await Promise.all([videoReq.json(), relatedReq.json()]);
-    console.log(data);
+  const relatedUrl = `https://be-api.us.archive.org/mds/v1/get_related/all/${identifier}`;
+  const [videoData, setVideoData] = useState(() =>
+    fetch(metadataUrl).then(resp => resp.json()).then(json => json)
+  );
+  const [relatedData, setRelatedData] = useState(() =>
+    fetch(relatedUrl).then(resp => resp.json()).then(json => json)
+  );
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  window.history.pushState(null, null, `?find=${identifier}`);
+
+  /* -------------  Callbacks ------------- */
+
+  function fetchMetadata() {
+    const requests = [
+      fetch(metadataUrl),
+      fetch(relatedUrl)
+    ];
+    Promise.all(requests)
+      .then(async (responses) => {
+        const [videoJson, relatedJson] = await Promise.all(responses.map(r => r.json()));
+        setErrorMsg(null);
+        setVideoData(videoJson);
+        setRelatedData(relatedJson);
+        setIdentifier(destination);
+        window.history.pushState(null, null, `?find=${identifier}`);
+      })
+      .catch(error => setErrorMsg("It looks like that wasn't in the archive. Make sure your identifier is correct."));
   }
 
-  return html$1`
-    <div>
+  /* ------------- Components ------------- */
+
+  const ErrorMessage = pixiedust(() => html$1`<div style=${{
+    display: errorMsg ? "block" : "none",
+    position: "relative",
+    top: -316,
+    width: 512,
+    height: 200
+  }} class="error-message">${errorMsg}</div>
+  `);
+
+  const VideoDetails = pixiedust(async () => {
+    const {metadata: {title, description, ...metaRest}} = await videoData;
+    return html$1`
+      <div>
+        <div>
+          <h1>${title}</h1>
+          <p>${description}</p>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(metaRest).map(([key, value]) => html$1`
+                <tr>
+                  <td>${key}</td>
+                  <td>${value}</td>
+                </tr>
+              `)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+  });
+
+  const RelatedVideos = pixiedust(async () => {
+    const data = await relatedData;
+    debugger;
+    return html$1`
+      <div>
+
+      </div>
+    `
+  });
+
+  const Lookup = pixiedust(async () => {
+    return html$1`
       <div>
         <form onsubmit=${(event) => {event.preventDefault(); fetchMetadata();}}>
-          I want to see archive.org/details/<input type="text" placeholder=${identifier} onchange=${({currentTarget: {value}}) => setDestination(value)} />
+          I want to see
+          <span>
+            archive.org/details/
+            <input type="text" placeholder=${identifier} onchange=${({currentTarget: {value}}) => setDestination(value)} />
+          </span>
         </form>
       </div>
+    `
+  });
+
+  const VideoPlayer = pixiedust(() => html$1`
+    <div style=${{
+      display: 'flex',
+      flexDirection: 'row',
+    }}>
       <iframe
         src=${`https://archive.org/embed/${identifier}`}
         width="640"
@@ -2157,11 +2230,25 @@ const Lookup = pixiedust(() => {
         frameborder="0"
         webkitallowfullscreen="true"
         mozallowfullscreen="true"
+        playlist="1"
         allowfullscreen></iframe>
+      ${ErrorMessage()}
+      ${RelatedVideos()}
+    </div>
+  `);
 
+  return html$1`
+    <div style=${{
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+      ${Lookup()}
+      ${VideoPlayer()}
+      ${VideoDetails()}
     </div>
   `;
+
 });
 
-render(document.body, Lookup);
+render(document.body, App);
 //# sourceMappingURL=bundle.js.map
