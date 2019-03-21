@@ -11,13 +11,23 @@ const App = hookable(() => {
 
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
-  const [metadataPairs, setMetadataPairs] = useState([])
+  const [metadataPairs, setMetadataPairs] = useState([]);
+  (async () => {
+    const resp = await fetch(`https://archive.org/metadata/${destination}`);
+    const {metadata: {title, description, ...metaRest}} = await resp.json();
+    setTitle(title);
+    setDescription(description);
+    setMetadataPairs(metaRest);
+  })();
 
-  const [relatedData, setRelatedData] = useState(async () => {
+  const [relatedData, setRelatedData] = useState([]);
+  (async () => {
     const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${identifier}`);
-    const json = await resp.json();
-    return await json;
-  });
+    const {hits: {hits: items}} = await resp.json();
+    setRelatedData(items.map(
+      ({_id: id, _source: {title: [title], description: [description]}}) => ({id, title, description})
+    ))
+  })();
   const [errorMsg, setErrorMsg] = useState('');
 
   window.history.pushState({}, '', `?find=${identifier}`)
@@ -90,40 +100,36 @@ const App = hookable(() => {
     </div>
   `);
 
-  // const RelatedVideos = hookable(async () => {
-  //   const {hits: {hits: items}} = await relatedData;
-  //   // debugger;
-  //   const relatedVideos = items
-  //     .map((item) => {
-  //       const {_id: id, _source: {title: [title], description: [description]}} = item
-  //       debugger;
-  //       return html`
-  //         <li>
-  //           <a title=${description} onclick=${(event) => {
-  //             event.preventDefault();
-  //             setIdentifier(id);
-  //             fetchMetadata();
-  //           }}>
-  //             <img src=${`https://archive.org/services/img/${id}`} height=80 width=120 />
-  //             <span>${title}</span>
-  //           </a>
-  //         </li>
-  //       `
-  //     });
-  //   // debugger;
-  //   return html`
-  //     <ul style=${{
-  //       display: 'inline-block',
-  //       height: 640,
-  //       width: 220,
-  //       backgroundColor: 'rgb(20, 20, 20)',
-  //       color: '#FFF',
-  //       textDecoration: 'none'
-  //     }}>
-  //       ${relatedVideos}
-  //     </ul>
-  //   `
-  // });
+  const RelatedVideos = hookable(() => {
+    const relatedVideos = relatedData
+      .map((item) => {
+        const {id, title, description} = item;
+        return html`
+          <li>
+            <a title=${description} onclick=${(event) => {
+              event.preventDefault();
+              setIdentifier(id);
+              fetchMetadata();
+            }}>
+              <img src=${`https://archive.org/services/img/${id}`} height=80 width=120 />
+              <span>${title}</span>
+            </a>
+          </li>
+        `
+      });
+    return html`
+      <ul style=${{
+        display: 'inline-block',
+        height: 480,
+        width: 220,
+        backgroundColor: 'rgb(20, 20, 20)',
+        color: '#FFF',
+        textDecoration: 'none'
+      }}>
+        ${relatedVideos}
+      </ul>
+    `
+  });
 
   const Lookup = hookable(() => html`
     <div class="lookup">
@@ -152,6 +158,7 @@ const App = hookable(() => {
         playlist="1"
         allowfullscreen></iframe>
       ${ErrorMessage()}
+      ${RelatedVideos()}
     </div>
   `);
 
