@@ -2114,26 +2114,162 @@ var hookable = fn => augmentor(function () {
 });
 
 const App = hookable(() => {
-  /* -------------    Setup   ------------- */
-
   const findParam = new URLSearchParams(window.location.search).get("find");
   const startingPoint = findParam ||
     "youtube-yBG10jlo9X0"; // Crash Course World Mythology #24: Ragnarok
 
-  if (!findParam) {
-    window.history.pushState({}, '', `?find=${startingPoint}`);
-  }
+  /* ------------- Components ------------- */
 
-  const [destination, setDestination] = useState(startingPoint);
-  const [identifier, setIdentifier] = useState(destination);
+  const { VideoDetails, setTitle, setDescription, setMetadataPairs } = (
+    // IIFE
+    function (){
+      const [title, setTitle] = useState("");
+      const [description, setDescription] = useState("");
+      const [metadataPairs, setMetadataPairs] = useState([]);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [metadataPairs, setMetadataPairs] = useState([]);
-  const [relatedData, setRelatedData] = useState([]);
-  const [errorMsg, setErrorMsg] = useState('');
+      return {
+        VideoDetails: hookable(() => html$1`
+          <div class="details">
+            <div>
+              <h1>${title}</h1>
+              <p>${description}</p>
+            </div>
+            <div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${metadataPairs.map(([key, value]) => html$1`
+                    <tr>
+                      <td>${key}</td>
+                      <td>${JSON.stringify(value)}</td>
+                    </tr>
+                  `)}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          `
+        ),
+        setTitle,
+        setDescription,
+        setMetadataPairs
+      }
+    }
+  ());
 
-  fetchData();
+  const {Lookup, identifier, destination, setIdentifier, setDestination} = (
+    // IIFE
+    function (){
+      const [destination, setDestination] = useState('');
+      const [identifier, setIdentifier] = useState(destination);
+      return {
+        Lookup: hookable(() => html$1`
+          <div class="lookup">
+            <form onsubmit=${(event) => {
+              debugger;
+              event.preventDefault();
+              const value = event.currentTarget.querySelector("input").value;
+              if (value !== '') {
+                setDestination(value);
+                fetchData();
+              }
+            }}>
+              I want to see
+              <span>
+                archive.org/details/
+                <input type="text" placeholder=${identifier} />
+              </span>
+              <button type="submit">please.</button>
+            </form>
+          </div>
+        `),
+        identifier,
+        destination,
+        setDestination,
+        setIdentifier
+      }
+    }());
+
+  // TODO: put VideoPlayer into its own file
+  const {VideoPlayer, setErrorMsg, setRelatedData} = (
+    // IIFE
+    function () {
+      const [relatedData, setRelatedData] = useState([]);
+      const [errorMsg, setErrorMsg] = useState('');
+
+      const RelatedVideos = hookable(() => {
+        const relatedVideos = relatedData
+          .map((item) => {
+            const {id, title, description} = item;
+            return html$1`
+              <li>
+                <a title=${description} onclick=${(event) => {
+                  debugger;
+                  event.preventDefault();
+                  setDestination(id);
+                  fetchData();
+                }}>
+                  <img src=${`https://archive.org/services/img/${id}`} height=50 width=75 />
+                  <span>${title}</span>
+                </a>
+              </li>
+            `
+          });
+        return html$1`
+          <ul style=${{
+            display: 'inline-block',
+            height: 480,
+            width: 250,
+            backgroundColor: 'rgb(20, 20, 20)',
+            color: '#FFF',
+            textDecoration: 'none'
+          }}>
+            ${relatedVideos}
+          </ul>
+        `
+      });
+
+      const ErrorMessage = hookable(() => html$1`<div style=${{
+        display: errorMsg === '' ? "none" : "block",
+        position: "relative",
+        top: -316,
+        width: 512,
+        height: 200
+      }} class="error-message">${errorMsg}</div>
+      `);
+
+      return {
+        VideoPlayer: hookable(() => html$1`
+          <div style=${{
+            display: 'flex',
+            flexDirection: 'row',
+          }}>
+            <div>
+              <iframe
+                src=${`https://archive.org/embed/${identifier}`}
+                width="640"
+                height="480"
+                frameborder="0"
+                webkitallowfullscreen="true"
+                mozallowfullscreen="true"
+                playlist="1"
+                allowfullscreen></iframe>
+            </div>
+            <div>${ErrorMessage()}</div>
+            <div>${RelatedVideos()}</div>
+          </div>
+        `),
+        setErrorMsg,
+        setRelatedData
+      }
+    }()
+  );
+
   /* -------------  Callbacks ------------- */
 
   async function fetchMetadata() {
@@ -2141,13 +2277,16 @@ const App = hookable(() => {
     const resp = await fetch(`https://archive.org/metadata/${destination}`);
     const json = await resp.json();
     const {metadata: {title, description, ...metaRest}} = json;
+    debugger;
     setTitle(title);
     setDescription(description);
     setMetadataPairs(Object.entries(metaRest));
   }
   async function fetchRelated() {
+    debugger;
     const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
     const json = await resp.json();
+    debugger;
     const {hits: {hits: items}} = json;
     const relData = items.map(
       ({_id: id, _source: {title: [title], description: [description]}}) => ({id, title, description})
@@ -2160,6 +2299,7 @@ const App = hookable(() => {
       const rel = fetchRelated();
       await meta;
       await rel;
+      debugger;
       setIdentifier(destination);
       setErrorMsg('');
     } catch (error) {
@@ -2167,117 +2307,18 @@ const App = hookable(() => {
     }
   }
 
-  /* ------------- Components ------------- */
-
-  const ErrorMessage = hookable(() => html$1`<div style=${{
-    display: errorMsg === '' ? "none" : "block",
-    position: "relative",
-    top: -316,
-    width: 512,
-    height: 200
-  }} class="error-message">${errorMsg}</div>
-  `);
-
-  const VideoDetails = hookable(() => html$1`
-    <div class="details">
-      <div>
-        <h1>${title}</h1>
-        <p>${description}</p>
-      </div>
-      <div>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${metadataPairs.map(([key, value]) => html$1`
-              <tr>
-                <td>${key}</td>
-                <td>${JSON.stringify(value)}</td>
-              </tr>
-            `)}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `);
-
-  const RelatedVideos = hookable(() => {
-    const relatedVideos = relatedData
-      .map((item) => {
-        const {id, title, description} = item;
-        return html$1`
-          <li>
-            <a title=${description} onclick=${(event) => {
-              debugger;
-              event.preventDefault();
-              setDestination(id);
-              fetchData();
-            }}>
-              <img src=${`https://archive.org/services/img/${id}`} height=50 width=75 />
-              <span>${title}</span>
-            </a>
-          </li>
-        `
-      });
-    return html$1`
-      <ul style=${{
-        display: 'inline-block',
-        height: 480,
-        width: 250,
-        backgroundColor: 'rgb(20, 20, 20)',
-        color: '#FFF',
-        textDecoration: 'none'
-      }}>
-        ${relatedVideos}
-      </ul>
-    `
+  /* ------------- kludge setup ------------- */
+  useEffect$1(() => {
+    debugger;
+    if (identifier === '') {
+      if (!findParam) {
+        window.history.pushState({}, '', `?find=${startingPoint}`);
+      }
+      setDestination(startingPoint);
+      debugger;
+      fetchData();
+    }
   });
-
-  const Lookup = hookable(() => html$1`
-    <div class="lookup">
-      <form onsubmit=${(event) => {
-        debugger;
-        event.preventDefault();
-        const value = event.currentTarget.querySelector("input").value;
-        if (value !== '') {
-          setDestination(value);
-          fetchData();
-        }
-      }}>
-        I want to see
-        <span>
-          archive.org/details/
-          <input type="text" placeholder=${identifier} />
-        </span>
-        <button type="submit">please.</button>
-      </form>
-    </div>
-  `);
-
-  const VideoPlayer = hookable(() => html$1`
-    <div style=${{
-      display: 'flex',
-      flexDirection: 'row',
-    }}>
-      <div>
-        <iframe
-          src=${`https://archive.org/embed/${identifier}`}
-          width="640"
-          height="480"
-          frameborder="0"
-          webkitallowfullscreen="true"
-          mozallowfullscreen="true"
-          playlist="1"
-          allowfullscreen></iframe>
-      </div>
-      <div>${ErrorMessage()}</div>
-      <div>${RelatedVideos()}</div>
-    </div>
-  `);
 
   return html$1`
     <div style=${{
