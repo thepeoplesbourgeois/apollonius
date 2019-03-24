@@ -1,6 +1,6 @@
 # Apollonius
 
-An experimental lightweight client for looking up videos in The Internet Archive.
+An experimental lightweight client for watching videos from The Internet Archive.
 
 #### Choice of name
 
