@@ -23,6 +23,9 @@ or from the page you're probably reading this on:
 3b. Wait for the download to conplete.
 3c. If you saved the ZIP, unzip it now.
 4. Congratulations! Your new software is now installed!
+4a. You can delete the ZIP file now.
+4b. Unless you'd prefer to keep it for sentimenal reasons.
+4c. But don't become a hoarder.
 ```
 
 ## Startup
