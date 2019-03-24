@@ -64,7 +64,9 @@ const App = hookable(() => {
     const RelatedVideos = hookable(() => {
       const tiles = relatedData.map(({id, title, description}) => html`
         <li>
-          <a title=${description} onclick=${(event) => {
+          <a style=${{
+            cursor: "pointer"
+          }} title=${description} onclick=${(event) => {
             event.preventDefault();
             fetchData(id);
           }}>
