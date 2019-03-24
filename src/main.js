@@ -94,7 +94,10 @@ const App = hookable(() => {
       top: -316,
       width: 512,
       height: 200
-      }} class="error-message">${errorMsg}</div>
+    }} class="error-message">
+      <div>${errorMsg}</div>
+      <a onclick=${() => setErrorMsg("")}>close</a>
+    </div>
     `);
 
     return html`
