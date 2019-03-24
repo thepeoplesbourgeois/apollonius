@@ -20,14 +20,13 @@ Open `~/index.html` in your browser.
 ## Features
 
 - The user can reach the video of their choice by passing `find={identifier}` in the query string
-- (broken) The user can enter an identifier within the input field above the embedded video. When doing so,
+- The user can enter an identifier within the input field above the embedded video. When doing so,
   the video, title, and description update within the page instead of causing a refresh. The URL parameters will
   also change to reflect the parameters for loading the video on client startup
+- The User can click the tile fore a related video to load the data for that video.
 
 ## Roadmap
 
-- The User should be able to click on a card for a related video within the related videos sidebar to load that video
-  and its related videos.
 - The video player should display reviews written by other users.
 - Transition the video from an `<embed>` to native `<video>`
   - Need to find a way to reliably embed the necessary video sources for formats supported by `<video>`
