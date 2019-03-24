@@ -48,16 +48,20 @@ const empty = [];
 const setup = [];
 
 const $ = (value, args) =>
-  typeof value === typeof $ ? value.apply(null, args) : value;
+  (typeof value) === (typeof $) ? value.apply(null, args)
+  : value;
 
-const diff = (a, b) => (a.length !== b.length || a.some(diverse, b));
+const diff = (a, b) =>
+  (a.length !== b.length || a.some(diverse, b));
 
-const stacked = id => runner => {
-  const state = {i: 0, stack: []};
-  runner[id] = state;
-  runner.before.push(() => {
-    state.i = 0;
-  });
+const stacked = function(id) {
+  return runner => {
+    const state = {i: 0, stack: []};
+    runner[id] = state;
+    runner.before.push(() => {
+      state.i = 0;
+    });
+  };
 };
 
 let id = 0;
@@ -70,35 +74,35 @@ const unstacked = id => {
   return {i, stack, update, unknown: i === stack.length};
 };
 
-var augmentor = fn => {
-  const current = runner($);
-  each(setup, current);
-  $.reset = () => {
-    each(current.reset, current);
-    for (const key in current) {
+var augmentor = augmentee => {
+  const currentRunner = runner($omeFunction);
+  each(setup, currentRunner);
+  $omeFunction.reset = () => {
+    each(currentRunner.reset, currentRunner);
+    for (const key in currentRunner) {
       if (/^_\$/.test(key))
-        current[key].stack.splice(0);
+        currentRunner[key].stack.splice(0);
     }
   };
-  return $;
-  function $() {
+  return $omeFunction;
+  function $omeFunction() {
     const prev = now;
-    now = current;
-    const {_, before, after, external} = current;
+    now = currentRunner;
+    const {_, before, after, external} = currentRunner;
     try {
       let result;
       do {
-        _.$ = _._ = false;
-        each(before, current);
-        result = fn.apply(_.c = this, _.a = arguments);
-        each(after, current);
+        _.$omething = _._flip = false;
+        each(before, currentRunner);
+        result = augmentee.apply(_.context = this, _.argus = arguments);
+        each(after, currentRunner);
         if (external.length)
           each(external.splice(0), result);
       } while (_._);
       return result;
     }
     finally {
-      _.$ = true;
+      _.$omething = true;
       now = prev;
     }
   }
@@ -106,17 +110,17 @@ var augmentor = fn => {
 
 const each = (arr, value) => {
   const {length} = arr;
-  let i = 0;
-  while (i < length)
-    arr[i++](value);
+  let index = 0;
+  while (index < length)
+    arr[index++](value);
 };
 
-const runner = $ => {
+const runner = fun => {
   const _ = {
-    _: true,
-    $: true,
-    c: null,
-    a: null
+    _flip: true,
+    $omething: true,
+    context: null,
+    argus: null
   };
   return {
     _: _,
@@ -124,7 +128,7 @@ const runner = $ => {
     after: [],
     external: [],
     reset: [],
-    update: () => _.$ ? $.apply(_.c, _.a) : (_._ = true)
+    update: () => _.$omething ? fun.apply(_.context, _.argus) : (_._flip = true)
   };
 };
 
@@ -2114,192 +2118,153 @@ var hookable = fn => augmentor(function () {
 });
 
 const App = hookable(() => {
-  const findParam = new URLSearchParams(window.location.search).get("find");
-  const startingPoint = findParam ||
-    "youtube-yBG10jlo9X0"; // Crash Course World Mythology #24: Ragnarok
+  /* -------------    State   ------------- */
+  const [identifier, setIdentifier] = useState("");
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [metadataPairs, setMetadataPairs] = useState([]);
+  const [relatedData, setRelatedData] = useState([]);
+
+  const [errorMsg, setErrorMsg] = useState("");
 
   /* ------------- Components ------------- */
 
-  const { VideoDetails, setTitle, setDescription, setMetadataPairs } = (
-    // IIFE
-    function (){
-      const [title, setTitle] = useState("");
-      const [description, setDescription] = useState("");
-      const [metadataPairs, setMetadataPairs] = useState([]);
+  const VideoDetails = hookable(() => html$1`
+    <div class="details">
+      <div>
+        <h1>${title}</h1>
+        <p>${description}</p>
+      </div>
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${metadataPairs.map(([key, value]) => html$1`
+              <tr>
+                <td>${key}</td>
+                <td>${value}</td>
+              </tr>
+            `)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `);
 
-      return {
-        VideoDetails: hookable(() => html$1`
-          <div class="details">
-            <div>
-              <h1>${title}</h1>
-              <p>${description}</p>
-            </div>
-            <div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Key</th>
-                    <th>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${metadataPairs.map(([key, value]) => html$1`
-                    <tr>
-                      <td>${key}</td>
-                      <td>${JSON.stringify(value)}</td>
-                    </tr>
-                  `)}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          `
-        ),
-        setTitle,
-        setDescription,
-        setMetadataPairs
-      }
-    }
-  ());
-
-  const {Lookup, identifier, destination, setIdentifier, setDestination} = (
-    // IIFE
-    function (){
-      const [destination, setDestination] = useState('');
-      const [identifier, setIdentifier] = useState(destination);
-      return {
-        Lookup: hookable(() => html$1`
-          <div class="lookup">
-            <form onsubmit=${(event) => {
-              debugger;
-              event.preventDefault();
-              const value = event.currentTarget.querySelector("input").value;
-              if (value !== '') {
-                setDestination(value);
-                fetchData();
-              }
-            }}>
-              I want to see
-              <span>
-                archive.org/details/
-                <input type="text" placeholder=${identifier} />
-              </span>
-              <button type="submit">please.</button>
-            </form>
-          </div>
-        `),
-        identifier,
-        destination,
-        setDestination,
-        setIdentifier
-      }
-    }());
+  const Lookup = hookable(() => html$1`
+    <div class="lookup">
+      <form onsubmit=${(event) => {
+        event.preventDefault();
+        const value = event.currentTarget.querySelector("input").value;
+        if (value !== '') {
+          fetchData(value);
+        }
+      }}>
+        I want to see
+        <span>
+          archive.org/details/
+          <input type="text" placeholder=${identifier} />
+        </span>
+        <button type="submit">please.</button>
+      </form>
+    </div>
+  `);
 
   // TODO: put VideoPlayer into its own file
-  const {VideoPlayer, setErrorMsg, setRelatedData} = (
-    // IIFE
-    function () {
-      const [relatedData, setRelatedData] = useState([]);
-      const [errorMsg, setErrorMsg] = useState('');
-
-      const RelatedVideos = hookable(() => {
-        const relatedVideos = relatedData
-          .map((item) => {
-            const {id, title, description} = item;
-            return html$1`
-              <li>
-                <a title=${description} onclick=${(event) => {
-                  debugger;
-                  event.preventDefault();
-                  setDestination(id);
-                  fetchData();
-                }}>
-                  <img src=${`https://archive.org/services/img/${id}`} height=50 width=75 />
-                  <span>${title}</span>
-                </a>
-              </li>
-            `
-          });
-        return html$1`
-          <ul style=${{
-            display: 'inline-block',
-            height: 480,
-            width: 250,
-            backgroundColor: 'rgb(20, 20, 20)',
-            color: '#FFF',
-            textDecoration: 'none'
+  const VideoPlayer = hookable(() => {
+    const RelatedVideos = hookable(() => {
+      const tiles = relatedData.map(({id, title, description}) => html$1`
+        <li>
+          <a title=${description} onclick=${(event) => {
+            event.preventDefault();
+            fetchData(id);
           }}>
-            ${relatedVideos}
-          </ul>
-        `
-      });
-
-      const ErrorMessage = hookable(() => html$1`<div style=${{
-        display: errorMsg === '' ? "none" : "block",
-        position: "relative",
-        top: -316,
-        width: 512,
-        height: 200
-      }} class="error-message">${errorMsg}</div>
+            <img src=${`https://archive.org/services/img/${id}`} height=50 width=75 />
+            <span>${title}</span>
+          </a>
+        </li>
       `);
 
-      return {
-        VideoPlayer: hookable(() => html$1`
-          <div style=${{
-            display: 'flex',
-            flexDirection: 'row',
-          }}>
-            <div>
-              <iframe
-                src=${`https://archive.org/embed/${identifier}`}
-                width="640"
-                height="480"
-                frameborder="0"
-                webkitallowfullscreen="true"
-                mozallowfullscreen="true"
-                playlist="1"
-                allowfullscreen></iframe>
-            </div>
-            <div>${ErrorMessage()}</div>
-            <div>${RelatedVideos()}</div>
-          </div>
-        `),
-        setErrorMsg,
-        setRelatedData
-      }
-    }()
-  );
+      return html$1`
+        <ul style=${{
+          display: 'inline-block',
+          height: 480,
+          width: 250,
+          backgroundColor: 'rgb(20, 20, 20)',
+          color: '#FFF',
+          textDecoration: 'none'
+        }}>
+          ${tiles}
+        </ul>
+      `
+    });
+
+    const ErrorMessage = hookable(() => html$1`<div style=${{
+      display: errorMsg === '' ? "none" : "block",
+      position: "relative",
+      top: -316,
+      width: 512,
+      height: 200
+    }} class="error-message">
+      <div>${errorMsg}</div>
+      <a onclick=${() => setErrorMsg("")}>close</a>
+    </div>
+    `);
+
+    return html$1`
+      <div style=${{
+        display: 'flex',
+        flexDirection: 'row',
+      }}>
+        <div>
+          <iframe
+            src=${`https://archive.org/embed/${identifier}`}
+            width="640"
+            height="480"
+            frameborder="0"
+            webkitallowfullscreen="true"
+            mozallowfullscreen="true"
+            playlist="1"
+            allowfullscreen></iframe>
+        </div>
+        <div>${ErrorMessage()}</div>
+        <div>${RelatedVideos()}</div>
+      </div>
+    `
+  });
 
   /* -------------  Callbacks ------------- */
 
-  async function fetchMetadata() {
-    debugger;
+  async function fetchMetadata(destination) {
     const resp = await fetch(`https://archive.org/metadata/${destination}`);
     const json = await resp.json();
     const {metadata: {title, description, ...metaRest}} = json;
-    debugger;
     setTitle(title);
     setDescription(description);
     setMetadataPairs(Object.entries(metaRest));
   }
-  async function fetchRelated() {
-    debugger;
+  async function fetchRelated(destination) {
     const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
     const json = await resp.json();
-    debugger;
     const {hits: {hits: items}} = json;
     const relData = items.map(
       ({_id: id, _source: {title: [title], description: [description]}}) => ({id, title, description})
     );
     setRelatedData(relData);
   }
-  async function fetchData() {
+  async function fetchData(destination) {
+    debugger
     try {
-      const meta = fetchMetadata();
-      const rel = fetchRelated();
+      const meta = fetchMetadata(destination);
+      const rel = fetchRelated(destination);
       await meta;
       await rel;
-      debugger;
       setIdentifier(destination);
       setErrorMsg('');
     } catch (error) {
@@ -2307,18 +2272,15 @@ const App = hookable(() => {
     }
   }
 
-  /* ------------- kludge setup ------------- */
   useEffect$1(() => {
-    debugger;
-    if (identifier === '') {
-      if (!findParam) {
-        window.history.pushState({}, '', `?find=${startingPoint}`);
-      }
-      setDestination(startingPoint);
-      debugger;
-      fetchData();
-    }
-  });
+    const findParam = new URLSearchParams(window.location.search).get("find");
+    const startingPoint = findParam ||
+      "youtube-yBG10jlo9X0"; // Crash Course World Mythology #24: Ragnarok
+
+    setIdentifier(startingPoint);
+    fetchData(startingPoint);
+  }, []);
+
 
   return html$1`
     <div style=${{
