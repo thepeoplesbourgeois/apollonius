@@ -9,8 +9,20 @@ Apollonius was [an allegedly darn good namesake](https://en.wikipedia.org/wiki/A
 
 ## Installation
 
+in terminal:
 ```bash
 $ git clone https://github.com/thepeoplesbourgeois/apollonius.git ./
+```
+
+or from the page you're probably reading this on:
+
+```
+1. Click "Clone or download"
+2. Click "Download ZIP"
+3a. If your browser prompts it, choose to either open the archive or to save it to a specific directory
+3b. Wait for the download to conplete.
+3c. If you saved the ZIP, unzip it now.
+4. Congratulations! Your new software is now installed!
 ```
 
 ## Startup
