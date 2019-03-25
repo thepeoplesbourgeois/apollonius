@@ -1,6 +1,6 @@
 import hookable, {render, html, useState, useEffect} from 'neverland/esm';
 
-const App = hookable(() => {
+const App = hookable(function() {
   /* -------------    State   ------------- */
   const [identifier, setIdentifier] = useState("");
 
@@ -40,51 +40,64 @@ const App = hookable(() => {
     </div>
   `);
 
-  const Lookup = hookable(() => html`
-    <div class="lookup">
-      <form onsubmit=${(event) => {
-        event.preventDefault();
-        const value = event.currentTarget.querySelector("input").value;
-        if (value !== '') {
-          fetchData(value);
-        }
+  const Lookup = hookable(function(){
+    return html`
+      <div class="lookup" style=${{
+        alignSelf: "flex-start"
       }}>
-        I want to see
-        <span>
-          archive.org/details/
-          <input type="text" placeholder=${identifier} />
-        </span>
-        <button type="submit">please.</button>
-      </form>
-    </div>
-  `);
+        <form onsubmit=${function(event) {
+          event.preventDefault();
+          const value = this.identifier.value;
+          if (value !== '') {
+            fetchData(value);
+          }
+        }}>
+          I want to see
+          <span>
+            archive.org/details/
+            <input name="identifier" type="text" placeholder=${identifier} />
+          </span>
+          <button type="submit">please.</button>
+        </form>
+      </div>
+    `
+  });
 
   // TODO: put VideoPlayer into its own file
   const VideoPlayer = hookable(() => {
     const RelatedVideos = hookable(() => {
       const tiles = relatedData.map(({id, title, description}) => html`
-        <li>
-          <a style=${{
+        <li
+          title=${description}
+          style=${{
             cursor: "pointer"
-          }} title=${description} onclick=${(event) => {
+          }}
+          onclick=${(event) => {
             event.preventDefault();
             fetchData(id);
-          }}>
-            <img src=${`https://archive.org/services/img/${id}`} height=50 width=75 />
-            <span>${title}</span>
-          </a>
+          }}
+        >
+          <img src=${`https://archive.org/services/img/${id}`} height=50 width=75 />
+          <span>${title}</span>
         </li>
       `)
 
       return html`
         <ul style=${{
-          display: 'inline-block',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-evenly',
           height: 480,
           width: 250,
           backgroundColor: 'rgb(20, 20, 20)',
           color: '#FFF',
-          textDecoration: 'none'
+          textDecoration: 'none',
+          margin: 0,
+          borderLeft: "4px black solid",
+          paddingLeft: 0,
+          listStyle: 'none'
         }}>
+          Related Videos<br />
           ${tiles}
         </ul>
       `
@@ -147,11 +160,9 @@ const App = hookable(() => {
 
   async function fetchData(destination) {
     try {
-      const meta = fetchMetadata(destination);
-      const rel = fetchRelated(destination);
-      await meta;
-      await rel;
+      await Promise.all([fetchMetadata, fetchRelated].map(call => call(destination)));
       setIdentifier(destination);
+      window.history.pushState({}, "", `?find=${destination}`);
       setErrorMsg('');
     } catch (error) {
       setErrorMsg("It looks like that wasn't in the archive. Make sure your identifier is correct.");
@@ -160,8 +171,10 @@ const App = hookable(() => {
 
   useEffect(() => {
     const findParam = new URLSearchParams(window.location.search).get("find");
-    const startingPoint = findParam ||
-      "youtube-yBG10jlo9X0"; // Crash Course World Mythology #24: Ragnarok
+    const startingPoint = findParam || "InformationM";
+    if (!findParam) {
+      window.history.replaceState({}, "", `?find=${startingPoint}`)
+    }
 
     setIdentifier(startingPoint)
     fetchData(startingPoint)
@@ -171,7 +184,9 @@ const App = hookable(() => {
   return html`
     <div style=${{
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: 930
       }}>
       ${Lookup()}
       ${VideoPlayer()}
