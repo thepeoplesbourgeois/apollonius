@@ -2181,7 +2181,9 @@ const App = hookable(() => {
     const RelatedVideos = hookable(() => {
       const tiles = relatedData.map(({id, title, description}) => html$1`
         <li>
-          <a title=${description} onclick=${(event) => {
+          <a style=${{
+            cursor: "pointer"
+          }} title=${description} onclick=${(event) => {
             event.preventDefault();
             fetchData(id);
           }}>
@@ -2259,7 +2261,6 @@ const App = hookable(() => {
     setRelatedData(relData);
   }
   async function fetchData(destination) {
-    debugger
     try {
       const meta = fetchMetadata(destination);
       const rel = fetchRelated(destination);
