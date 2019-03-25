@@ -2,7 +2,7 @@
 
 An experimental lightweight client for watching videos from The Internet Archive.
 
-#### Choice of name
+### Choice of name
 
 Apollo was [already taken](https://www.apollographql.com/), but as far as a steward would be concerned,
 Apollonius was [an allegedly darn good namesake](https://en.wikipedia.org/wiki/Apollonius_of_Tyana#Historical_facts) to the god of knowledge.
