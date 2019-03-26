@@ -5,6 +5,7 @@
   "main": "main.js",
   "module": "_main.js",
   "dependencies": {
+    "hyperhtml-app": "^1.0.1",
     "neverland": "^1.2.4",
     "rollup-plugin-node-resolve": "^4.0.1"
   },
