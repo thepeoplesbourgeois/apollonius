@@ -1,0 +1,38 @@
+body {
+  display: flex;
+  justify-content: center;
+}
+
+div.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 930;
+
+  .lookup {
+    align-self: flex-start;
+  }
+
+  .video-player {
+    display: flex;
+    flex-direction: row;
+
+    .related-videos {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      height: 480;
+      width: 250;
+      background-color: rgb(20, 20, 20);
+      color: #FFF;
+      margin: 0;
+      border-left: 4px black solid;
+      padding-left: 0;
+      list-style: none;
+
+      h4 {
+        margin: 0;
+      }
+    }
+  }
+}
