@@ -42,9 +42,7 @@ const App = hookable(function() {
 
   const Lookup = hookable(function(){
     return html`
-      <div class="lookup" style=${{
-        alignSelf: "flex-start"
-      }}>
+      <div class="lookup">
         <form onsubmit=${function(event) {
           event.preventDefault();
           const value = this.identifier.value;
@@ -63,15 +61,12 @@ const App = hookable(function() {
     `
   });
 
-  // TODO: put VideoPlayer into its own file
   const VideoPlayer = hookable(() => {
     const RelatedVideos = hookable(() => {
       const tiles = relatedData.map(({id, title, description}) => html`
         <li
+          class="related-video"
           title=${description}
-          style=${{
-            cursor: "pointer"
-          }}
           onclick=${(event) => {
             event.preventDefault();
             fetchData(id);
@@ -83,21 +78,8 @@ const App = hookable(function() {
       `)
 
       return html`
-        <ul style=${{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-evenly',
-          height: 480,
-          width: 250,
-          backgroundColor: 'rgb(20, 20, 20)',
-          color: '#FFF',
-          textDecoration: 'none',
-          margin: 0,
-          borderLeft: "4px black solid",
-          paddingLeft: 0,
-          listStyle: 'none'
-        }}>
-          Related Videos<br />
+        <ul class="related-videos">
+          <h4>Related Videos</h4>
           ${tiles}
         </ul>
       `
@@ -116,10 +98,7 @@ const App = hookable(function() {
     `);
 
     return html`
-      <div style=${{
-        display: 'flex',
-        flexDirection: 'row',
-      }}>
+      <div class="video-player">
         <div>
           <iframe
             src=${`https://archive.org/embed/${identifier}`}
@@ -131,8 +110,8 @@ const App = hookable(function() {
             playlist="1"
             allowfullscreen></iframe>
         </div>
-        <div>${ErrorMessage()}</div>
-        <div>${RelatedVideos()}</div>
+        ${ErrorMessage()}
+        ${RelatedVideos()}
       </div>
     `
   })
@@ -142,7 +121,9 @@ const App = hookable(function() {
   async function fetchMetadata(destination) {
     const resp = await fetch(`https://archive.org/metadata/${destination}`);
     const json = await resp.json();
-    const {metadata: {title, description, ...metaRest}} = json;
+    debugger;
+    const {metadata: {title, description, ...metaRest}, reviews, items} = json;
+
     setTitle(title);
     setDescription(description);
     setMetadataPairs(Object.entries(metaRest));
@@ -152,10 +133,12 @@ const App = hookable(function() {
     const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
     const json = await resp.json();
     const {hits: {hits: items}} = json;
-    const relData = items.map(
-      ({_id: id, _source: {title: [title], description: [description]}}) => ({id, title, description})
-    );
-    setRelatedData(relData);
+    const relVids = items
+      .filter(({_source: {mediatype: [mediatype]}}) => mediatype === "movies")
+      .map(({_id: id, _source: {title: [title], description: [description]}}) =>
+        ({id, title, description})
+      );
+    setRelatedData(relVids);
   };
 
   async function fetchData(destination) {
@@ -182,12 +165,7 @@ const App = hookable(function() {
 
 
   return html`
-    <div style=${{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: 930
-      }}>
+    <div class="app">
       ${Lookup()}
       ${VideoPlayer()}
       ${VideoDetails()}

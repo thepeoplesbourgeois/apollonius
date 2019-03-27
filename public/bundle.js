@@ -48,20 +48,16 @@ const empty = [];
 const setup = [];
 
 const $ = (value, args) =>
-  (typeof value) === (typeof $) ? value.apply(null, args)
-  : value;
+  typeof value === typeof $ ? value.apply(null, args) : value;
 
-const diff = (a, b) =>
-  (a.length !== b.length || a.some(diverse, b));
+const diff = (a, b) => (a.length !== b.length || a.some(diverse, b));
 
-const stacked = function(id) {
-  return runner => {
-    const state = {i: 0, stack: []};
-    runner[id] = state;
-    runner.before.push(() => {
-      state.i = 0;
-    });
-  };
+const stacked = id => runner => {
+  const state = {i: 0, stack: []};
+  runner[id] = state;
+  runner.before.push(() => {
+    state.i = 0;
+  });
 };
 
 let id = 0;
@@ -74,35 +70,35 @@ const unstacked = id => {
   return {i, stack, update, unknown: i === stack.length};
 };
 
-var augmentor = augmentee => {
-  const currentRunner = runner($omeFunction);
-  each(setup, currentRunner);
-  $omeFunction.reset = () => {
-    each(currentRunner.reset, currentRunner);
-    for (const key in currentRunner) {
+var augmentor = fn => {
+  const current = runner($);
+  each(setup, current);
+  $.reset = () => {
+    each(current.reset, current);
+    for (const key in current) {
       if (/^_\$/.test(key))
-        currentRunner[key].stack.splice(0);
+        current[key].stack.splice(0);
     }
   };
-  return $omeFunction;
-  function $omeFunction() {
+  return $;
+  function $() {
     const prev = now;
-    now = currentRunner;
-    const {_, before, after, external} = currentRunner;
+    now = current;
+    const {_, before, after, external} = current;
     try {
       let result;
       do {
-        _.$omething = _._flip = false;
-        each(before, currentRunner);
-        result = augmentee.apply(_.context = this, _.argus = arguments);
-        each(after, currentRunner);
+        _.$ = _._ = false;
+        each(before, current);
+        result = fn.apply(_.c = this, _.a = arguments);
+        each(after, current);
         if (external.length)
           each(external.splice(0), result);
       } while (_._);
       return result;
     }
     finally {
-      _.$omething = true;
+      _.$ = true;
       now = prev;
     }
   }
@@ -110,17 +106,17 @@ var augmentor = augmentee => {
 
 const each = (arr, value) => {
   const {length} = arr;
-  let index = 0;
-  while (index < length)
-    arr[index++](value);
+  let i = 0;
+  while (i < length)
+    arr[i++](value);
 };
 
-const runner = fun => {
+const runner = $ => {
   const _ = {
-    _flip: true,
-    $omething: true,
-    context: null,
-    argus: null
+    _: true,
+    $: true,
+    c: null,
+    a: null
   };
   return {
     _: _,
@@ -128,7 +124,7 @@ const runner = fun => {
     after: [],
     external: [],
     reset: [],
-    update: () => _.$omething ? fun.apply(_.context, _.argus) : (_._flip = true)
+    update: () => _.$ ? $.apply(_.c, _.a) : (_._ = true)
   };
 };
 
@@ -2159,9 +2155,7 @@ const App = hookable(function() {
 
   const Lookup = hookable(function(){
     return html$1`
-      <div class="lookup" style=${{
-        alignSelf: "flex-start"
-      }}>
+      <div class="lookup">
         <form onsubmit=${function(event) {
           event.preventDefault();
           const value = this.identifier.value;
@@ -2180,15 +2174,12 @@ const App = hookable(function() {
     `
   });
 
-  // TODO: put VideoPlayer into its own file
   const VideoPlayer = hookable(() => {
     const RelatedVideos = hookable(() => {
       const tiles = relatedData.map(({id, title, description}) => html$1`
         <li
+          class="related-video"
           title=${description}
-          style=${{
-            cursor: "pointer"
-          }}
           onclick=${(event) => {
             event.preventDefault();
             fetchData(id);
@@ -2200,21 +2191,8 @@ const App = hookable(function() {
       `);
 
       return html$1`
-        <ul style=${{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-evenly',
-          height: 480,
-          width: 250,
-          backgroundColor: 'rgb(20, 20, 20)',
-          color: '#FFF',
-          textDecoration: 'none',
-          margin: 0,
-          borderLeft: "4px black solid",
-          paddingLeft: 0,
-          listStyle: 'none'
-        }}>
-          Related Videos<br />
+        <ul class="related-videos">
+          <h4>Related Videos</h4>
           ${tiles}
         </ul>
       `
@@ -2233,10 +2211,7 @@ const App = hookable(function() {
     `);
 
     return html$1`
-      <div style=${{
-        display: 'flex',
-        flexDirection: 'row',
-      }}>
+      <div class="video-player">
         <div>
           <iframe
             src=${`https://archive.org/embed/${identifier}`}
@@ -2248,8 +2223,8 @@ const App = hookable(function() {
             playlist="1"
             allowfullscreen></iframe>
         </div>
-        <div>${ErrorMessage()}</div>
-        <div>${RelatedVideos()}</div>
+        ${ErrorMessage()}
+        ${RelatedVideos()}
       </div>
     `
   });
@@ -2259,7 +2234,9 @@ const App = hookable(function() {
   async function fetchMetadata(destination) {
     const resp = await fetch(`https://archive.org/metadata/${destination}`);
     const json = await resp.json();
-    const {metadata: {title, description, ...metaRest}} = json;
+    debugger;
+    const {metadata: {title, description, ...metaRest}, reviews, items} = json;
+
     setTitle(title);
     setDescription(description);
     setMetadataPairs(Object.entries(metaRest));
@@ -2268,10 +2245,12 @@ const App = hookable(function() {
     const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
     const json = await resp.json();
     const {hits: {hits: items}} = json;
-    const relData = items.map(
-      ({_id: id, _source: {title: [title], description: [description]}}) => ({id, title, description})
-    );
-    setRelatedData(relData);
+    const relVids = items
+      .filter(({_source: {mediatype: [mediatype]}}) => mediatype === "movies")
+      .map(({_id: id, _source: {title: [title], description: [description]}}) =>
+        ({id, title, description})
+      );
+    setRelatedData(relVids);
   }
   async function fetchData(destination) {
     try {
@@ -2297,12 +2276,7 @@ const App = hookable(function() {
 
 
   return html$1`
-    <div style=${{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: 930
-      }}>
+    <div class="app">
       ${Lookup()}
       ${VideoPlayer()}
       ${VideoDetails()}
