@@ -7,7 +7,7 @@ div.app {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 930;
+  width: 930px;
 
   .lookup {
     align-self: flex-start;
@@ -20,9 +20,8 @@ div.app {
     .related-videos {
       display: flex;
       flex-direction: column;
-      justify-content: space-evenly;
-      height: 480;
-      width: 250;
+      height: 480px;
+      width: 250px;
       background-color: rgb(20, 20, 20);
       color: #FFF;
       margin: 0;
@@ -32,6 +31,20 @@ div.app {
 
       h4 {
         margin: 0;
+      }
+
+      li {
+        cursor: pointer;
+        height: 80px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        transition: background-color 0.2s;
+        background-color: rgb(20, 20, 20);
+
+        &:hover {
+          background-color: lighten(rgb(20,20,20), 40);
+        }
       }
     }
   }
