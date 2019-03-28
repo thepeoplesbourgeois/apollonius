@@ -1,6 +1,8 @@
 import hookable, {render, html, useState, useEffect} from 'neverland/esm';
 
 const App = hookable(function() {
+  const PLAYABLE_FORMATS = new Set(["h.264", "MPEG4", "Ogg Video", "WebM"]);
+
   /* -------------    State   ------------- */
   const [identifier, setIdentifier] = useState("");
 
@@ -19,24 +21,29 @@ const App = hookable(function() {
         <h1>${title}</h1>
         <p>${description}</p>
       </div>
-      <div>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${metadataPairs.map(([key, value]) => html`
-              <tr>
-                <td>${key}</td>
-                <td>${value}</td>
-              </tr>
-            `)}
-          </tbody>
-        </table>
-      </div>
+        ${
+          // TODO: Make look good
+          false ? html`
+            <div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${metadataPairs.map(([key, value]) => html`
+                    <tr>
+                      <td>${key}</td>
+                      <td>${value}</td>
+                    </tr>
+                  `)}
+                </tbody>
+              </table>
+            </div>
+          ` : null
+        }
     </div>
   `);
 
@@ -51,10 +58,10 @@ const App = hookable(function() {
           }
         }}>
           I want to see
-          <span>
+          <code>
             archive.org/details/
             <input name="identifier" type="text" placeholder=${identifier} />
-          </span>
+          </code>
           <button type="submit">please.</button>
         </form>
       </div>
@@ -117,39 +124,59 @@ const App = hookable(function() {
   })
 
   /* -------------  Callbacks ------------- */
+  // function parseVideoLinks(items, identifier) {
+  //   items.filter(item => PLAYABLE_FORMATS.has(item.format))
+  //     .map(({name}) => new RegExp(`${identifier}\.\w+$`). )
+  // }
 
   async function fetchMetadata(destination) {
-    const resp = await fetch(`https://archive.org/metadata/${destination}`);
-    const json = await resp.json();
-    debugger;
-    const {metadata: {title, description, ...metaRest}, reviews, items} = json;
-
-    setTitle(title);
-    setDescription(description);
-    setMetadataPairs(Object.entries(metaRest));
+    try {
+      const resp = await fetch(`https://archive.org/metadata/${destination}`);
+      const json = await resp.json();
+      const {
+        metadata: {
+          mediatype,
+          title,
+          description,
+          identifier,
+          ...metaRest
+        },
+        reviews,
+        files
+      } = json;
+      if (mediatype !== "movies") { throw "Not a video" }
+      // parseVideoLinks(files, identifier);
+      setTitle(title);
+      setDescription(description);
+      // setMetadataPairs(Object.entries(metaRest));
+      setMetadataPairs([]);
+    } catch (error) {
+      setErrorMsg(`Oops. Apollonius couldn't find that video. Do you have the right identifier?`)
+    }
   };
 
   async function fetchRelated(destination) {
-    const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
-    const json = await resp.json();
-    const {hits: {hits: items}} = json;
-    const relVids = items
-      .filter(({_source: {mediatype: [mediatype]}}) => mediatype === "movies")
-      .map(({_id: id, _source: {title: [title], description: [description]}}) =>
-        ({id, title, description})
-      );
-    setRelatedData(relVids);
+    try {
+      const resp = await fetch(`https://archive.org/mds/v1/get_related/all/${destination}`);
+      const json = await resp.json();
+      const {hits: {hits: items}} = json;
+      const relVids = items
+        .filter(({_source: {mediatype: [mediatype]}}) => mediatype === "movies")
+        .map(({_id: id, _source: {title: [title], description: [description]}}) =>
+          ({id, title, description})
+        );
+      setRelatedData(relVids);
+    } catch (error) {
+      console.log(error);
+      setRelatedData([])
+    }
   };
 
   async function fetchData(destination) {
-    try {
-      await Promise.all([fetchMetadata, fetchRelated].map(call => call(destination)));
-      setIdentifier(destination);
-      window.history.pushState({}, "", `?find=${destination}`);
-      setErrorMsg('');
-    } catch (error) {
-      setErrorMsg("It looks like that wasn't in the archive. Make sure your identifier is correct.");
-    }
+    await Promise.all([fetchMetadata, fetchRelated].map(call => call(destination)));
+    setIdentifier(destination);
+    window.history.pushState({}, "", `?find=${destination}`);
+    setErrorMsg('');
   }
 
   useEffect(() => {

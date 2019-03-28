@@ -1,19 +1,40 @@
 body {
   display: flex;
   justify-content: center;
+  background-color: #2d2d2d;
 }
 
 div.app {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 930px;
+  width: 900px;
+  font-family: Avenir, Verdana, Tahoma, sans-serif;
 
   .lookup {
-    align-self: flex-start;
+    background-color: #f5f5dc;
+    width: 100%;
+    font-size: 26px;
+    padding-left: 4px;
+  }
+
+  code {
+    border: 1px inset #efefef;
+    border-top: 0;
+    border-bottom: 0;
+    background-color: white;
+
+    input {
+      display: inline-block;
+      width: 225px;
+      margin-left: -16px;
+      border: 0;
+      background-color: transparent;
+      font: inherit;
+    }
   }
 
   .video-player {
+    width: 100%;
     display: flex;
     flex-direction: row;
 
@@ -21,17 +42,13 @@ div.app {
       display: flex;
       flex-direction: column;
       height: 480px;
-      width: 250px;
+      width: 256px;
       background-color: rgb(20, 20, 20);
       color: #FFF;
       margin: 0;
       border-left: 4px black solid;
       padding-left: 0;
       list-style: none;
-
-      h4 {
-        margin: 0;
-      }
 
       li {
         cursor: pointer;
@@ -48,4 +65,14 @@ div.app {
       }
     }
   }
+
+  .details {
+    background-color: #f5f5dc;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
 }
