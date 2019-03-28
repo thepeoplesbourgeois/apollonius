@@ -94,10 +94,11 @@ const App = hookable(function() {
 
     const ErrorMessage = hookable(() => html`<div style=${{
       display: errorMsg === '' ? "none" : "block",
-      position: "relative",
-      top: -316,
-      width: 512,
-      height: 200
+      position: "absolute",
+      width: 640,
+      height: 200,
+      marginTop: 135,
+      backgroundColor: '#BBB'
     }} class="error-message">
       <div>${errorMsg}</div>
       <a onclick=${() => setErrorMsg("")}>close</a>
