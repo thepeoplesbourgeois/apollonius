@@ -58,7 +58,7 @@ const App = hookable(function() {
           }
         }}>
           I want to see
-          <code>
+          <code onclick="this.children.identifier.focus()">
             archive.org/details/
             <input name="identifier" type="text" placeholder=${identifier} />
           </code>
