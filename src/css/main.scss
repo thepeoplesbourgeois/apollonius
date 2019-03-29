@@ -56,8 +56,13 @@ div.app {
         display: flex;
         flex-direction: row;
         align-items: center;
-        transition: background-color 0.2s;
+        font-size: 14px;
         background-color: rgb(20, 20, 20);
+        transition: background-color 0.2s;
+
+        span {
+          margin-left: 4px;
+        }
 
         &:hover {
           background-color: lighten(rgb(20,20,20), 40);

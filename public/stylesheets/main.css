@@ -53,8 +53,13 @@ div.app .video-player .related-videos li {
   display: flex;
   flex-direction: row;
   align-items: center;
-  transition: background-color 0.2s;
+  justify-content: space-between;
+  font-size: 14px;
   background-color: #141414;
+  transition: background-color 0.2s;
+}
+div.app .video-player .related-videos li span {
+  margin-left: 4px;
 }
 div.app .video-player .related-videos li:hover {
   background-color: #7a7a7a;
