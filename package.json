@@ -5,12 +5,12 @@
   "main": "src/js/main.js",
   "module": "_main.js",
   "dependencies": {
-    "hyperhtml-app": "^1.0.1",
-    "neverland": "^1.2.4",
-    "rollup-plugin-node-resolve": "^4.0.1"
+    "neverland": "^1.2.4"
   },
   "devDependencies": {
-    "literally-html": "^0.1.1"
+    "literally-html": "^0.1.1",
+    "rollup-plugin-node-resolve": "^4.0.1",
+    "rollup-plugin-terser": "^4.0.4"
   },
   "scripts": {
     "test": "npm test",

@@ -51,10 +51,9 @@ Open `~/index.html` in your browser.
 ## Technical implementation
 
 Apollonius runs entirely within a webpage via the JavaScript library [`neverland`](https://github.com/webreflection/neverland)
-by Andrea Giammarchi. `neverland` is meant to be a replacement for `React`, with
+by Andrea Giammarchi. `neverland` is a replacement for `React`, with
 an emphasis on state management through the Hook pattern [introduced in React 16.8](https://reactjs.org/docs/hooks-intro.html).
-New features will be implemented as I learn more about the JavaScript standard library
-and how to interface with it through `neverland`. Bundling is handled by Rollup.
-Minimization isn't enabled, but apparently `neverland` weighs in around 5KB when it is.
 
-Not too bad for near-parity with React behaviors.
+The application is a total of 25kb, minified. `Neverland`'s developer claims that `lighterhtml` is only 4kb minified; the app components and logic are 5kb, meaning that `neverland` adds 16kb to support the hook pattern...
+
+In the future I might try removing it to use only `lighterhtml`
