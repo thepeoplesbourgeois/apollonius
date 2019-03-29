@@ -101,7 +101,10 @@ const App = hookable(function() {
       backgroundColor: '#BBB'
     }} class="error-message">
       <div>${errorMsg}</div>
-      <a onclick=${() => setErrorMsg("")}>close</a>
+      <a onclick=${(event) => {
+        event.preventDefault();
+        setErrorMsg("");
+      }}>close</a>
     </div>
     `);
 
