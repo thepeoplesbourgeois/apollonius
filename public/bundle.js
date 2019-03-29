@@ -2194,7 +2194,10 @@ const App = hookable(function() {
       backgroundColor: '#BBB'
     }} class="error-message">
       <div>${errorMsg}</div>
-      <a onclick=${() => setErrorMsg("")}>close</a>
+      <a onclick=${(event) => {
+        event.preventDefault();
+        setErrorMsg("");
+      }}>close</a>
     </div>
     `);
 
@@ -2250,7 +2253,7 @@ const App = hookable(function() {
   }
   async function fetchRelated(destination) {
     try {
-      const resp = await fetch(`https://archive.org/mds/v1/get_related/all/${destination}`);
+      const resp = await fetch(`https://be-api.us.archive.org/mds/v1/get_related/all/${destination}`);
       const json = await resp.json();
       const {hits: {hits: items}} = json;
       const relVids = items
