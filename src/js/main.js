@@ -1,7 +1,12 @@
 import hookable, {render, html, useState, useEffect} from 'neverland/esm';
 
 const App = hookable(function() {
-  const PLAYABLE_FORMATS = new Set(["h.264", "MPEG4", "Ogg Video", "WebM"]);
+  const PLAYABLE_FORMATS = {
+    "h.264": "video/mp4",
+    "MPEG4": "video/mp4",
+    "WebM": "video/webm",
+    "Ogg Video": "video/ogv"
+  };
 
   /* -------------    State   ------------- */
   const [identifier, setIdentifier] = useState("");
@@ -10,19 +15,20 @@ const App = hookable(function() {
   const [description, setDescription] = useState("");
   const [metadataPairs, setMetadataPairs] = useState([]);
   const [relatedData, setRelatedData] = useState([]);
+  const [sourceRefs, setSourceRefs] = useState([]);
 
   const [errorMsg, setErrorMsg] = useState("");
 
   /* ------------- Components ------------- */
 
-  const VideoDetails = hookable(() => html`
+  const Details = hookable(() => html`
     <div class="details">
       <div>
         <h1>${title}</h1>
         <p>${description}</p>
       </div>
         ${
-          // TODO: Make look good
+          // TODO: Make pretty
           false ? html`
             <div>
               <table>
@@ -68,7 +74,7 @@ const App = hookable(function() {
     `
   });
 
-  const VideoPlayer = hookable(() => {
+  const Player = hookable(function() {
     const RelatedVideos = hookable(() => {
       const tiles = relatedData.map(({id, title, description}) => html`
         <li
@@ -90,15 +96,10 @@ const App = hookable(function() {
           ${tiles}
         </ul>
       `
-    })
+    });
 
     const ErrorMessage = hookable(() => html`<div style=${{
-      display: errorMsg === '' ? "none" : "block",
-      position: "absolute",
-      width: 640,
-      height: 200,
-      marginTop: 135,
-      backgroundColor: '#BBB'
+      display: errorMsg === '' ? "none" : "block"
     }} class="error-message">
       <div>${errorMsg}</div>
       <a onclick=${(event) => {
@@ -110,16 +111,12 @@ const App = hookable(function() {
 
     return html`
       <div class="video-player">
-        <div>
-          <iframe
-            src=${`https://archive.org/embed/${identifier}`}
-            width="640"
-            height="480"
-            frameborder="0"
-            webkitallowfullscreen="true"
-            mozallowfullscreen="true"
-            playlist="1"
-            allowfullscreen></iframe>
+        <div class="video-container">
+          <video controls width="640" poster=${`https://archive.org/services/img/${identifier}`}>
+            ${sourceRefs.map(({src, type}) => html`
+              <source src=${src} type=${type} />
+            `)}
+          </video>
         </div>
         ${ErrorMessage()}
         ${RelatedVideos()}
@@ -128,11 +125,6 @@ const App = hookable(function() {
   })
 
   /* -------------  Callbacks ------------- */
-  // function parseVideoLinks(items, identifier) {
-  //   items.filter(item => PLAYABLE_FORMATS.has(item.format))
-  //     .map(({name}) => new RegExp(`${identifier}\.\w+$`). )
-  // }
-
   async function fetchMetadata(destination) {
     try {
       const resp = await fetch(`https://archive.org/metadata/${destination}`);
@@ -150,10 +142,15 @@ const App = hookable(function() {
       } = json;
       if (mediatype !== "movies") { throw "Not a video" }
       // parseVideoLinks(files, identifier);
+      setSourceRefs(files
+        .filter(({format}) => PLAYABLE_FORMATS[format])
+        .map(({name, format}) => ({
+          src: `https://archive.org/download/${identifier}/${name}`,
+          type: PLAYABLE_FORMATS[format]
+      })));
       setTitle(title);
       setDescription(description);
       // setMetadataPairs(Object.entries(metaRest));
-      setMetadataPairs([]);
     } catch (error) {
       setErrorMsg(`Oops. Apollonius couldn't find that video. Do you have the right identifier?`)
     }
@@ -198,8 +195,8 @@ const App = hookable(function() {
   return html`
     <div class="app">
       ${Lookup()}
-      ${VideoPlayer()}
-      ${VideoDetails()}
+      ${Player()}
+      ${Details()}
     </div>
   `;
 

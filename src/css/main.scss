@@ -4,6 +4,11 @@ body {
   background-color: #2d2d2d;
 }
 
+$lime: #2abf05;
+$cream: darken(#f5f5dc, 10);
+$charcoal: #141414;
+$offwhite: #efefef;
+
 div.app {
   display: flex;
   flex-direction: column;
@@ -11,40 +16,71 @@ div.app {
   font-family: Avenir, Verdana, Tahoma, sans-serif;
 
   .lookup {
-    background-color: #f5f5dc;
-    width: 100%;
+    background-color: $cream;
+    width: 896px;
     font-size: 26px;
     padding-left: 4px;
-  }
 
-  code {
-    border: 1px inset #efefef;
-    border-top: 0;
-    border-bottom: 0;
-    background-color: white;
+    form {
+      display: flex;
 
-    input {
-      display: inline-block;
-      width: 225px;
-      margin-left: -16px;
-      border: 0;
-      background-color: transparent;
-      font: inherit;
+      code {
+        border: 1px inset $offwhite;
+        border-top: 0;
+        border-bottom: 0;
+        background-color: white;
+        display: inline-block;
+        padding: 5px 0 2px;
+        margin-left: 4px;
+
+        input {
+          display: inline-block;
+          width: 300px;
+          margin-left: -16px;
+          border: 0;
+          background-color: transparent;
+          font: inherit;
+        }
+      }
+
+      button[type=submit] {
+        line-height: 32px;
+        color: white;
+        font: inherit;
+        font-size: 20px;
+        margin-left: auto;
+        background-color: $lime;
+        border-block-width: 1px;
+      }
     }
   }
+
 
   .video-player {
     width: 100%;
     display: flex;
     flex-direction: row;
+    background-color: black;
+
+    .video-container {
+      align-self: center;
+    }
+
+    .error-message {
+      position: "absolute";
+      width: 640px;
+      height: 200px;
+      margin-top: 135px;
+      background-color: '#BBB';
+    }
 
     .related-videos {
       display: flex;
       flex-direction: column;
       height: 480px;
       width: 256px;
-      background-color: rgb(20, 20, 20);
-      color: #FFF;
+      background-color: $charcoal;
+      color: white;
       margin: 0;
       border-left: 4px black solid;
       padding-left: 0;
@@ -56,8 +92,8 @@ div.app {
         display: flex;
         flex-direction: row;
         align-items: center;
-        font-size: 14px;
-        background-color: rgb(20, 20, 20);
+        font-size: 13px;
+        background-color: $charcoal;
         transition: background-color 0.2s;
 
         span {
@@ -65,14 +101,14 @@ div.app {
         }
 
         &:hover {
-          background-color: lighten(rgb(20,20,20), 40);
+          background-color: lighten($charcoal, 40);
         }
       }
     }
   }
 
   .details {
-    background-color: #f5f5dc;
+    background-color: $cream;
     padding-left: 12px;
     padding-right: 12px;
   }

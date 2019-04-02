@@ -11,29 +11,55 @@ div.app {
   font-family: Avenir, Verdana, Tahoma, sans-serif;
 }
 div.app .lookup {
-  background-color: #f5f5dc;
-  width: 100%;
+  background-color: #eaeab4;
+  width: 896px;
   font-size: 26px;
   padding-left: 4px;
 }
-div.app code {
+div.app .lookup form {
+  display: flex;
+}
+div.app .lookup form code {
   border: 1px inset #efefef;
   border-top: 0;
   border-bottom: 0;
   background-color: white;
-}
-div.app code input {
   display: inline-block;
-  width: 225px;
+  padding: 5px 0 2px;
+  margin-left: 4px;
+}
+div.app .lookup form code input {
+  display: inline-block;
+  width: 300px;
   margin-left: -16px;
   border: 0;
   background-color: transparent;
   font: inherit;
 }
+div.app .lookup form button[type=submit] {
+  line-height: 32px;
+  color: white;
+  font: inherit;
+  font-size: 20px;
+  margin-left: auto;
+  background-color: #2abf05;
+  border-block-width: 1px;
+}
 div.app .video-player {
   width: 100%;
   display: flex;
   flex-direction: row;
+  background-color: black;
+}
+div.app .video-player .video-container {
+  align-self: center;
+}
+div.app .video-player .error-message {
+  position: "absolute";
+  width: 640px;
+  height: 200px;
+  margin-top: 135px;
+  background-color: "#BBB";
 }
 div.app .video-player .related-videos {
   display: flex;
@@ -41,7 +67,7 @@ div.app .video-player .related-videos {
   height: 480px;
   width: 256px;
   background-color: #141414;
-  color: #FFF;
+  color: white;
   margin: 0;
   border-left: 4px black solid;
   padding-left: 0;
@@ -53,7 +79,7 @@ div.app .video-player .related-videos li {
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-size: 14px;
+  font-size: 13px;
   background-color: #141414;
   transition: background-color 0.2s;
 }
@@ -64,7 +90,7 @@ div.app .video-player .related-videos li:hover {
   background-color: #7a7a7a;
 }
 div.app .details {
-  background-color: #f5f5dc;
+  background-color: #eaeab4;
   padding-left: 12px;
   padding-right: 12px;
 }
