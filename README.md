@@ -7,7 +7,7 @@ An experimental lightweight client for watching videos from The Internet Archive
 Apollo was [already taken](https://www.apollographql.com/), but as far as a steward would be concerned,
 Apollonius was [an allegedly darn good namesake](https://en.wikipedia.org/wiki/Apollonius_of_Tyana#Historical_facts) to the god of knowledge.
 
-## Installation
+## Installation (or use the [hosted app on Glitch](https://thepeoplesbourgeois-apollonius.glitch.me/)!)
 
 in terminal:
 ```bash
